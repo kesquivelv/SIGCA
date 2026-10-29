@@ -1,0 +1,17 @@
+module.exports = {
+  Usuario: require('./Usuario'),
+  Paciente: require('./Paciente'),
+  Responsable: require('./Responsable'),
+  Servicio: require('./Servicio'),
+  Cita: require('./Cita'),
+  SolicitudCita: require('./SolicitudCita'),
+  Material: require('./Material'),
+  AsignacionMaterial: require('./AsignacionMaterial'),
+  ContenidoInstitucional: require('./ContenidoInstitucional'),
+  Publicacion: require('./Publicacion'),
+  Horario: require('./Horario'),
+  MensajeContacto: require('./MensajeContacto'),
+  Pago: require('./Pago'),
+  Caja: require('./Caja'),
+  ...require('./Contador'),
+};
