@@ -8,7 +8,7 @@ Proyecto Final Integrador — Desarrollo Web — Universidad Mariano Gálvez de 
 
 | Integrante | Carné | Responsabilidad principal |
 |---|---|---|
-| Kevin Esquivel | _(carné)_ | _(completar)_ |
+| Kevin Esquivel | _(5190-18-3661)_ | _(Backend y base de datos)_ |
 | _(nombre)_ | _(carné)_ | _(completar)_ |
 | _(nombre)_ | _(carné)_ | _(completar)_ |
 
