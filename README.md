@@ -10,7 +10,7 @@ Proyecto Final Integrador — Desarrollo Web — Universidad Mariano Gálvez de 
 |---|---|---|
 | Kevin Esquivel | 5190-18-3661 | Backend y base de datos |
 | Valery Morales | 6590-22-18013 | Frontend e integración |
-| Esdras Pérez | 7690-14-6737 | Seguridad y gestión financiera |
+| Esdras Pérez | 7690-14-6737 | Seguridad y gestión financiera (pendiente: autenticación, roles, gestión de citas, pagos, caja diaria y validaciones) |
 
 ## Tecnologías
 
@@ -36,10 +36,33 @@ sigca/
 │   ├── seed/seed.js        Datos de prueba
 │   ├── tests/              Prueba automática del procedimiento de evaluación
 │   └── .env.example
-├── frontend/               Aplicación Vue 3
+├── frontend/               Aplicación Vue 3 + Vite (ver frontend/README.md)
 ├── postman/                Colección de Postman
 └── docs/                   Guía de defensa y evidencias
 ```
+
+## Requisitos pendientes (Esdras Pérez)
+
+Los siguientes requisitos están asignados a Esdras Pérez (tercer integrante) y se consideran **pendientes** hasta que los revise, complete y valide:
+
+- Autenticación
+- Roles
+- Gestión de citas
+- Pagos
+- Caja diaria
+- Validaciones
+
+### Cambios concretos que quedan por hacer
+
+Buscar `TODO(tercer-integrante)` en `frontend/src`:
+
+1. **Anular pago** — `views/admin/Pagos.vue`: falta el botón "Anular" en la tabla (el diálogo y la llamada ya existen; solo si el pago es válido y su caja está abierta).
+2. **Reprogramar cita** — `components/admin/CitaDetalle.vue`: falta el botón "Reprogramar" (el formulario `CitaForm` ya soporta el modo reprogramar).
+3. **Cierre de caja** — `views/admin/Caja.vue`: falta avisar en el campo que las observaciones son obligatorias cuando hay diferencia (el backend ya responde 422 y el mensaje se muestra arriba del formulario).
+4. **Cambiar contraseña propia** — no hay pantalla; falta una vista o modal que use `authApi.cambiarPassword` (`PATCH /api/auth/password`).
+5. **Pruebas** — agregar al script `backend/tests/flujo-evaluacion.js` el caso de traslape de un mismo paciente (la regla existe en `citas.service.js`, pero no está probada).
+
+El repositorio incluye una implementación de referencia (backend y frontend) para que el resto del sistema funcione y pueda probarse, pero no se da por entregada ni revisada. El tercer integrante puede tomarla como base, ajustarla o reemplazarla.
 
 ## Requisitos de instalación
 
@@ -85,8 +108,10 @@ npm run dev         # inicia la API en http://localhost:4000/api
 ```bash
 cd frontend
 npm install
-npm run dev         # abre http://localhost:5173
+npm run dev         # abre http://localhost:5173 (el proxy envía /api a http://localhost:4000)
 ```
+
+Más detalle (variables, build, roles y pantallas) en [`frontend/README.md`](frontend/README.md).
 
 **Prueba automática del procedimiento de evaluación** (con la API corriendo y recién cargado el seed):
 
@@ -95,7 +120,7 @@ cd backend
 npm run test:flujo
 ```
 
-Recorre los pasos de la sección 16 del enunciado (login, paciente, responsable, servicio, cita, traslape, caja, abonos, saldo, cierre, permisos, etc.) y valida 71 resultados esperados.
+Recorre los pasos de la sección 16 del enunciado (login, paciente, responsable, servicio, cita, traslape, caja, abonos, saldo, cierre, permisos, etc.) y valida 45 resultados esperados.
 
 ## Datos de prueba
 
