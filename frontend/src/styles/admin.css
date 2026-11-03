@@ -1,0 +1,83 @@
+/* ========== Panel administrativo: prioriza orden y legibilidad ========== */
+.adm { min-height: 100vh; display: grid; grid-template-columns: 252px 1fr; background: var(--crema); background-image: var(--grano); }
+.adm-lado { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--tinta); color: var(--crema); display: flex; flex-direction: column; padding: 18px 12px; }
+.adm-marca { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; font-family: var(--f-titulo); font-size: 1.3rem; color: var(--mostaza-claro); text-decoration: none; }
+.adm-marca svg { width: 36px; height: 36px; }
+.adm-nav { display: grid; gap: 2px; }
+.adm-nav .grupo { margin: 14px 10px 4px; font-size: .78rem; font-weight: 800; color: #b9a38a; }
+.adm-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--crema); text-decoration: none; font-weight: 700; font-size: .98rem; }
+.adm-nav a:hover { background: #55423a; color: #fff; }
+.adm-nav a.router-link-active { background: var(--mostaza); color: var(--tinta); }
+.adm-nav svg { width: 20px; height: 20px; flex: none; }
+.adm-nav .cuenta { margin-left: auto; background: var(--terracota); color: #fff; font-size: .78rem; border-radius: 999px; padding: 0 8px; min-width: 22px; text-align: center; }
+.adm-lado .sesion { margin-top: auto; padding: 14px 8px 0; border-top: 1px dashed #8a7360; font-size: .92rem; }
+.adm-lado .sesion strong { display: block; }
+.adm-lado .sesion .btn { margin-top: 10px; width: 100%; }
+.adm-main { min-width: 0; }
+.adm-top { display: none; align-items: center; gap: 12px; padding: 10px var(--gutter); background: var(--tinta); color: var(--crema); position: sticky; top: 0; z-index: 30; }
+.adm-contenido { padding: clamp(18px, 3vw, 34px) var(--gutter) 60px; max-width: 1280px; }
+.adm-vel { display: none; }
+@media (max-width: 960px) {
+  .adm { grid-template-columns: 1fr; }
+  .adm-top { display: flex; }
+  .adm-lado { position: fixed; z-index: 50; left: 0; top: 0; bottom: 0; width: min(290px, 85vw); transform: translateX(-102%); transition: transform .2s; }
+  .adm-lado.abierto { transform: none; }
+  .adm-vel.abierto { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(58, 43, 34, .55); }
+}
+
+.pag-cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
+.pag-cab h1 { font-family: var(--f-titulo); font-weight: 400; font-size: clamp(1.7rem, 3.5vw, 2.3rem); margin: 0; }
+.pag-cab p { margin: 2px 0 0; color: var(--tinta-suave); }
+.barra-filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; }
+.barra-filtros .campo { margin: 0; min-width: 160px; flex: 0 1 200px; }
+.barra-filtros .campo.busca { flex: 1 1 240px; }
+
+.panel { background: var(--hueso); border: var(--borde-fino); border-radius: var(--r-mano-sm); padding: 18px; }
+.panel h2 { font-size: 1.1rem; }
+.panel + .panel { margin-top: 18px; }
+.rejilla-paneles { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+
+.indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.indicador { background: var(--hueso); border: var(--borde-fino); border-radius: var(--r-mano-sm); padding: 14px 16px; text-decoration: none; color: var(--tinta); display: block; }
+.indicador:hover { background: #fff8e6; color: var(--tinta); }
+.indicador .valor { display: block; font-family: var(--f-titulo); font-size: 2rem; line-height: 1.1; }
+.indicador .etq { font-weight: 700; color: var(--tinta-suave); font-size: .92rem; }
+.indicador.alerta { border-color: var(--terracota); background: #fdf0ea; }
+
+.lista-simple { list-style: none; padding: 0; margin: 0; }
+.lista-simple li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--linea); }
+.lista-simple li:last-child { border-bottom: 0; }
+.lista-simple .crece { flex: 1; min-width: 0; }
+.dato { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 0; }
+.dato dt { font-weight: 800; color: var(--tinta-suave); }
+.dato dd { margin: 0; }
+@media (max-width: 520px) { .dato { grid-template-columns: 1fr; } .dato dt { margin-top: 8px; } }
+.acciones-fila { display: flex; flex-wrap: wrap; gap: 8px; }
+.totales { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.totales div { background: var(--crema); border: 1px solid var(--linea); border-radius: 10px; padding: 8px 12px; }
+.totales b { display: block; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.totales .dif-mal b { color: var(--error); }
+.neg { color: var(--error); }
+.saldo-pos { color: var(--terracota-osc); font-weight: 800; }
+
+/* Calendario */
+.cal-marco { background: var(--hueso); border: var(--borde-fino); border-radius: var(--r-mano-sm); padding: 14px; }
+.cal-marco .fc { --fc-border-color: var(--linea); --fc-today-bg-color: var(--mostaza-claro); --fc-page-bg-color: var(--hueso); --fc-neutral-bg-color: var(--beige); font-size: .95rem; }
+.cal-marco .fc .fc-button { background: var(--hueso); color: var(--tinta); border: var(--borde-fino); border-radius: 10px; font-weight: 800; text-transform: none; }
+.cal-marco .fc .fc-button:hover { background: var(--beige); }
+.cal-marco .fc .fc-button-primary:not(:disabled).fc-button-active, .cal-marco .fc .fc-button-primary:not(:disabled):active { background: var(--tinta); color: var(--hueso); border-color: var(--tinta); }
+.cal-marco .fc .fc-toolbar-title { font-family: var(--f-titulo); font-weight: 400; font-size: 1.5rem; }
+.cal-marco .fc .fc-event { cursor: pointer; border-radius: 6px; padding: 1px 3px; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; font-size: .9rem; font-weight: 700; }
+.leyenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; border: 1.5px solid var(--tinta); }
+@media (max-width: 640px) { .cal-marco .fc .fc-toolbar { flex-direction: column; gap: 8px; } }
+
+/* Ingreso */
+.login-pag { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-caja { width: min(100%, 420px); }
+.login-caja .tarjeta { padding: 26px; }
+.login-demo { margin-top: 16px; font-size: .9rem; }
+.login-demo summary { cursor: pointer; font-weight: 800; }
+.login-demo table { margin-top: 8px; font-size: .86rem; }
+.login-demo td { padding: 3px 6px; }
+.login-demo button { background: none; border: 0; text-decoration: underline; cursor: pointer; padding: 0; }
