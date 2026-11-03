@@ -10,7 +10,7 @@ Proyecto Final Integrador — Desarrollo Web — Universidad Mariano Gálvez de 
 |---|---|---|
 | Kevin Esquivel | 5190-18-3661 | Backend y base de datos |
 | Valery Morales | 6590-22-18013 | Frontend e integración |
-| _(nombre)_ | _(carné)_ | _(completar)_ |
+| Esdras Pérez | 7690-14-6737 | Seguridad y gestión financiera |
 
 ## Tecnologías
 
