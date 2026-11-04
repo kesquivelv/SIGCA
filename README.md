@@ -10,7 +10,7 @@ Proyecto Final Integrador — Desarrollo Web — Universidad Mariano Gálvez de 
 |---|---|---|
 | Kevin Esquivel | 5190-18-3661 | Backend y base de datos |
 | Valery Morales | 6590-22-18013 | Frontend e integración |
-| Esdras Pérez | 7690-14-6737 | Seguridad y gestión financiera (pendiente: autenticación, roles, gestión de citas, pagos, caja diaria y validaciones) |
+| Esdras Pérez | 7690-14-6737 | Seguridad y gestión financiera |
 
 ## Tecnologías
 
@@ -41,28 +41,39 @@ sigca/
 └── docs/                   Guía de defensa y evidencias
 ```
 
-## Requisitos pendientes (Esdras Pérez)
+## Revisión de seguridad y gestión financiera
 
-Los siguientes requisitos están asignados a Esdras Pérez (tercer integrante) y se consideran **pendientes** hasta que los revise, complete y valide:
+Se completaron los faltantes de interfaz y validación:
 
-- Autenticación
-- Roles
-- Gestión de citas
-- Pagos
-- Caja diaria
-- Validaciones
+- **Anular pagos:** la tabla permite anular únicamente pagos registrados asociados a una caja abierta; además, el botón respeta el rol y la propiedad de la caja. El backend sigue siendo la autoridad y exige motivo.
+- **Reprogramar citas:** se habilitó el botón para citas pendientes/confirmadas y personal administrativo. El backend verifica que el nuevo profesional exista, esté activo y sea realmente profesional, además de volver a comprobar horario y traslapes.
+- **Cierre de caja:** cuando el efectivo contado difiere del esperado, el campo observaciones se marca requerido y se valida antes de enviar. El backend mantiene la validación final.
+- **Contraseña propia:** se añadió un modal accesible desde la sesión para cambiarla con la contraseña actual, mínimo de 8 caracteres y confirmación; usa `PATCH /api/auth/password`.
+- **Traslape del paciente:** el flujo automatizado intenta una cita superpuesta con otro profesional y verifica que el servidor responda `409` por conflicto del paciente.
+- **Configuración JWT:** el servidor y el seed cargan `backend/.env.example`; el servidor no arranca si falta una clave JWT de al menos 32 caracteres.
 
-### Cambios concretos que quedan por hacer
+La autenticación JWT, la carga del usuario activo en cada petición, el control de permisos por rol, los estados de citas, la caja del usuario y los importes enteros en centavos ya están protegidos por el backend. El flujo también comprueba tokens inválidos, revocación inmediata al desactivar un usuario y que el profesional no pueda consultar teléfonos de responsables. El frontend no sustituye esas comprobaciones.
 
-Buscar `TODO(tercer-integrante)` en `frontend/src`:
+### Ejecutar las validaciones
 
-1. **Anular pago** — `views/admin/Pagos.vue`: falta el botón "Anular" en la tabla (el diálogo y la llamada ya existen; solo si el pago es válido y su caja está abierta).
-2. **Reprogramar cita** — `components/admin/CitaDetalle.vue`: falta el botón "Reprogramar" (el formulario `CitaForm` ya soporta el modo reprogramar).
-3. **Cierre de caja** — `views/admin/Caja.vue`: falta avisar en el campo que las observaciones son obligatorias cuando hay diferencia (el backend ya responde 422 y el mensaje se muestra arriba del formulario).
-4. **Cambiar contraseña propia** — no hay pantalla; falta una vista o modal que use `authApi.cambiarPassword` (`PATCH /api/auth/password`).
-5. **Pruebas** — agregar al script `backend/tests/flujo-evaluacion.js` el caso de traslape de un mismo paciente (la regla existe en `citas.service.js`, pero no está probada).
+1. Edite `backend/.env.example`: configure `MONGODB_URI` con su conexión a MongoDB y `JWT_SECRET` con una clave aleatoria de al menos 32 caracteres. En este proyecto el servidor y el seed leen directamente este archivo; no es necesario crear `backend/.env`.
+2. Cargue los datos ficticios con `npm run seed` desde `backend/` (el seed limpia las colecciones de la base configurada).
+3. Inicie la API (`npm run dev`) y el frontend (`npm run dev` desde `frontend/`).
+4. Con la API activa, ejecute `npm run test:flujo` desde `backend/`. Incluye autenticación, roles, pacientes, citas, traslapes, pagos, caja, cierre y validación del portal.
+5. Ejecute `npm run build` desde `frontend/` para validar la compilación de producción.
 
-El repositorio incluye una implementación de referencia (backend y frontend) para que el resto del sistema funcione y pueda probarse, pero no se da por entregada ni revisada. El tercer integrante puede tomarla como base, ajustarla o reemplazarla.
+### Evidencias visuales
+
+Las capturas del portal y módulos administrativos se guardan en [`docs/evidencias/`](docs/evidencias/):
+
+| Vista | Captura |
+|---|---|
+| Portal público | ![Portal público](docs/evidencias/portal-publico.png) |
+| Administración | ![Panel de administración](docs/evidencias/administracion.png) |
+| Pacientes | ![Módulo de pacientes](docs/evidencias/pacientes.png) |
+| Calendario | ![Calendario de citas](docs/evidencias/calendario.png) |
+| Pagos | ![Módulo de pagos](docs/evidencias/pagos.png) |
+| Caja diaria | ![Caja diaria](docs/evidencias/caja.png) |
 
 ## Requisitos de instalación
 
@@ -74,23 +85,23 @@ El repositorio incluye una implementación de referencia (backend y frontend) pa
 
 ## Configuración de MongoDB y variables de entorno
 
-En `backend/` copie el archivo de ejemplo y edítelo:
+Edite directamente `backend/.env.example`; tanto `npm run dev` como `npm run seed` cargan las variables de este archivo:
 
 ```bash
 cd backend
-cp .env.example .env        # en Windows (PowerShell): copy .env.example .env
+# Edite .env.example y configure MONGODB_URI y JWT_SECRET.
 ```
 
 | Variable | Descripción | Ejemplo |
 |---|---|---|
 | `PORT` | Puerto de la API | `4000` |
 | `MONGODB_URI` | Conexión a MongoDB (local o Atlas) | `mongodb://127.0.0.1:27017/sigca` |
-| `JWT_SECRET` | Clave para firmar tokens (larga y aleatoria) | `una-cadena-larga-y-secreta` |
+| `JWT_SECRET` | Clave aleatoria de al menos 32 caracteres para firmar tokens | Genérela y no la comparta |
 | `JWT_EXPIRES_IN` | Duración de la sesión | `8h` |
 | `CORS_ORIGIN` | URL del frontend | `http://localhost:5173` |
 | `TZ_OFFSET` | Zona horaria del centro | `-06:00` |
 
-> El archivo `.env` está en `.gitignore`: **nunca** se sube a GitHub.
+> `.env.example` se usa para la configuración local de este proyecto y está versionado. No coloque credenciales reales ni claves de producción en él; para producción configure secretos mediante variables de entorno seguras.
 
 ## Comandos de ejecución
 
@@ -120,7 +131,21 @@ cd backend
 npm run test:flujo
 ```
 
-Recorre los pasos de la sección 16 del enunciado (login, paciente, responsable, servicio, cita, traslape, caja, abonos, saldo, cierre, permisos, etc.) y valida 45 resultados esperados.
+Recorre los pasos de la sección 16 del enunciado (login, paciente, responsable, servicio, cita, traslapes, reprogramación, caja, abonos, saldo, cierre, permisos, etc.) y valida 53 resultados esperados.
+
+### Resultados de validación
+
+Validado el **4 de noviembre de 2026** en una base MongoDB local aislada para la prueba:
+
+- `npm run test:flujo`: **53 correctas, 0 errores** (código de salida 0), incluye los casos de traslape entre citas de un paciente y reprogramación.
+- `npm run build` en `frontend/`: compilación de producción correcta.
+- `node --check` en los archivos backend modificados: correcto.
+- Cambio de contraseña propio: contraseña actual incorrecta rechazada (`400`), cambio correcto (`200`), credencial anterior rechazada (`401`) y nueva credencial aceptada (`200`).
+- Modal en navegador: impide confirmar una contraseña distinta y permite guardar la confirmación correcta.
+- Arranque del API con clave JWT menor de 32 caracteres: rechazado como se esperaba.
+- Docker no está disponible en este entorno; las pruebas API utilizaron el servicio MongoDB local disponible.
+
+**Alcance pendiente:** el flujo automatizado es secuencial y no valida solicitudes simultáneas. Antes de un despliegue con varios usuarios concurrentes, se recomienda añadir y probar protección atómica contra doble reserva, sobrepago concurrente y apertura simultánea de cajas.
 
 ## Datos de prueba
 

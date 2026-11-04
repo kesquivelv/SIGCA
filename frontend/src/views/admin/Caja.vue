@@ -41,8 +41,10 @@ async function abrir() {
 }
 async function cerrar() {
   if (!cerrarForm.validar()) return;
-  // TODO(tercer-integrante): validar aquí que las observaciones sean obligatorias si hay diferencia.
-  // El backend ya lo exige (422), pero falta el aviso en el campo antes de enviar.
+  if (diferencia.value !== null && Math.abs(diferencia.value) > 0.004 && !cerrarForm.valores.observaciones.trim()) {
+    cerrarForm.errores.observaciones = 'Explique la diferencia para cerrar la caja.';
+    return;
+  }
   trabajando.value = true;
   try {
     const c = await cajaApi.cerrar(Number(cerrarForm.valores.efectivoContado), cerrarForm.valores.observaciones);
@@ -123,8 +125,8 @@ const colHist = [{ key: 'codigo', label: 'Caja' }, { key: 'fecha', label: 'Apert
       <p v-if="diferencia !== null" class="aviso-form" :class="Math.abs(diferencia) > 0.004 ? 'error' : 'info'" role="status">
         {{ Math.abs(diferencia) <= 0.004 ? 'La caja cuadra.' : diferencia < 0 ? `Faltan ${Q(-diferencia)}.` : `Sobran ${Q(diferencia)}.` }}
       </p>
-      <Campo v-slot="{ id }" label="Observaciones" :error="cerrarForm.errores.observaciones" ayuda="Obligatorias si hay diferencia.">
-        <textarea :id="id" v-model="cerrarForm.valores.observaciones" rows="3" maxlength="500" />
+      <Campo v-slot="{ id, describedby, invalido }" label="Observaciones" :error="cerrarForm.errores.observaciones" :ayuda="diferencia !== null && Math.abs(diferencia) > 0.004 ? 'Obligatorias para explicar la diferencia.' : 'Opcionales si la caja cuadra.'" :requerido="diferencia !== null && Math.abs(diferencia) > 0.004">
+        <textarea :id="id" v-model="cerrarForm.valores.observaciones" rows="3" maxlength="500" :aria-describedby="describedby" :aria-invalid="invalido" @blur="cerrarForm.tocar('observaciones')" />
       </Campo>
     </form>
     <template #pie><button type="button" class="btn btn-claro" @click="cierre = false">Volver</button><Boton tipo="submit" form="form-cierre" class="btn-mostaza" :cargando="trabajando">Cerrar caja</Boton></template>

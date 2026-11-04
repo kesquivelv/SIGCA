@@ -30,7 +30,6 @@ async function entrar() {
   }
 }
 
-// Cuentas de demostración del seed (solo para facilitar la revisión del proyecto)
 const demo = [
   ['Administrador', 'admin@sigca.com', 'Admin123!'],
   ['Recepcionista', 'recepcion1@sigca.com', 'Recep123!'],

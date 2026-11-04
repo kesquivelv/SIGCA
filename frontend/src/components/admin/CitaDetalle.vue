@@ -87,7 +87,7 @@ async function despuesDe() { dialogo.value = ''; await cargar(); emit('cambio');
     </template>
 
     <template v-if="cita" #pie>
-      <!-- TODO(tercer-integrante): botón "Reprogramar" (dialogo = 'reprogramar'; solo si puedeGestionar && abierta). -->
+      <button v-if="puedeGestionar && abierta" type="button" class="btn btn-sm btn-claro" :disabled="trabajando" @click="dialogo = 'reprogramar'">Reprogramar</button>
       <button v-if="puedeGestionar && cita.estado === 'PENDIENTE'" type="button" class="btn btn-sm btn-salvia" :disabled="trabajando" @click="cambiarEstado('CONFIRMADA')">Confirmar</button>
       <button v-if="puedeCompletar" type="button" class="btn btn-sm btn-salvia" :disabled="trabajando" @click="cambiarEstado('COMPLETADA')">Marcar como completada</button>
       <button v-if="puedeGestionar && abierta" type="button" class="btn btn-sm btn-peligro" @click="dialogo = 'cancelar'">Cancelar cita</button>

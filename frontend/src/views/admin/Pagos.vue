@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { pagosApi, citasApi } from '../../api';
+import { useAuthStore } from '../../stores/auth';
 import { useToastStore } from '../../stores/toast';
 import { useCarga } from '../../utils/useCarga';
 import { fechaHora, hoyISO, sumarDias, Q, METODOS, nombreCompleto } from '../../utils/format';
@@ -11,6 +12,7 @@ import Confirmar from '../../components/ui/Confirmar.vue';
 import PagoForm from '../../components/admin/PagoForm.vue';
 
 const toast = useToastStore();
+const auth = useAuthStore();
 const filtros = ref({ desde: sumarDias(hoyISO(), -7), hasta: hoyISO(), estado: '', metodo: '' });
 const texto = ref('');
 const { datos, cargando, error, cargar } = useCarga(() => pagosApi.listar(filtros.value), { inicial: [] });
@@ -79,7 +81,15 @@ const columnas = [
       <template #c-metodo="{ fila }">{{ METODOS[fila.metodo] }}<span v-if="fila.referencia" class="texto-suave"><br />Ref. {{ fila.referencia }}</span></template>
       <template #c-monto="{ fila }"><span :style="fila.estado === 'ANULADO' ? 'text-decoration:line-through' : ''" :class="{ neg: fila.estado === 'ANULADO' }">{{ Q(fila.monto) }}</span></template>
       <template #c-estado="{ fila }"><span class="badge" :class="fila.estado === 'ANULADO' ? 'badge-terracota' : 'badge-salvia'">{{ fila.estado === 'ANULADO' ? 'Anulado' : 'Válido' }}</span><div v-if="fila.motivoAnulacion" class="texto-suave">{{ fila.motivoAnulacion }}</div></template>
-      <!-- TODO(tercer-integrante): botón "Anular" (abre el diálogo Confirmar de abajo; solo si fila.estado === 'REGISTRADO' y la caja está ABIERTA). -->
+      <template #acciones="{ fila }">
+        <button
+          v-if="fila.estado === 'REGISTRADO' && fila.caja?.estado === 'ABIERTA' && (auth.esAdmin || String(fila.caja.usuario) === String(auth.usuario.id))"
+          type="button"
+          class="btn btn-sm btn-peligro"
+          :disabled="trabajando"
+          @click="anulando = fila"
+        >Anular</button>
+      </template>
     </Tabla>
   </EstadoDatos>
 

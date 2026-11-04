@@ -43,9 +43,17 @@ function diaHabilFuturo(n = 3) {
 
   console.log('Permisos por rol');
   esperar('sin token -> 401', (await llamar('GET', '/pacientes')).status === 401);
+  esperar('token inválido -> 401', (await llamar('GET', '/pacientes', { token: 'token-invalido' })).status === 401);
   esperar('recepcionista no ve usuarios -> 403', (await llamar('GET', '/usuarios', { token: recep })).status === 403);
   esperar('profesional no crea pacientes -> 403', (await llamar('POST', '/pacientes', { token: prof, body: {} })).status === 403);
   esperar('profesional no ve pagos -> 403', (await llamar('GET', '/pagos', { token: prof })).status === 403);
+  const usuariosActivos = (await llamar('GET', '/usuarios', { token: admin })).data;
+  const usuarioRecep2 = usuariosActivos.find((u) => u.correo === 'recepcion2@sigca.com');
+  r = await llamar('PATCH', `/usuarios/${usuarioRecep2.id}/estado`, { token: admin, body: { activo: false } });
+  esperar('administrador desactiva usuario', r.status === 200 && !r.data.activo);
+  esperar('JWT de usuario desactivado se rechaza inmediatamente -> 401', (await llamar('GET', '/caja/actual', { token: recep2 })).status === 401);
+  r = await llamar('PATCH', `/usuarios/${usuarioRecep2.id}/estado`, { token: admin, body: { activo: true } });
+  esperar('administrador reactiva usuario', r.status === 200 && r.data.activo);
   r = await llamar('GET', '/pacientes', { token: prof });
   esperar('profesional solo ve pacientes con cita suya', r.status === 200 && r.data.length > 0 && r.data.length < 10, `(${r.data && r.data.length})`);
   esperar('profesional no recibe teléfono de responsables', r.data.every((p) => p.direccion === undefined));
@@ -77,8 +85,32 @@ function diaHabilFuturo(n = 3) {
   r = await llamar('POST', '/citas', { token: recep, body: { paciente: pac.id, servicio: srv.id, profesional: psic.id, fecha, horaInicio: hora } });
   esperar('programar cita', r.status === 201 && /^CIT-/.test(r.data.codigo) && r.data.precioCentavos === 25000, JSON.stringify(r.data));
   const cita = r.data;
+  const otrosProfesionales = profes.filter((p) => p.id !== psic.id);
+  let citaPacienteTraslapada = false;
+  const minutos = (horaTexto) => Number(horaTexto.slice(0, 2)) * 60 + Number(horaTexto.slice(3, 5));
+  for (const otro of otrosProfesionales) {
+    const disp = await llamar('GET', `/citas/disponibilidad?profesional=${otro.id}&fecha=${fecha}&servicio=${srv.id}`, { token: recep });
+    const horaTraslapada = (disp.data?.libres || []).find((h) => (
+      minutos(h) < minutos(hora) + srv.duracionMinutos
+      && minutos(h) + srv.duracionMinutos > minutos(hora)
+    ));
+    if (!horaTraslapada) continue;
+    r = await llamar('POST', '/citas', { token: recep, body: { paciente: pac.id, servicio: srv.id, profesional: otro.id, fecha, horaInicio: horaTraslapada } });
+    esperar('un paciente no puede tener dos citas traslapadas -> 409', r.status === 409 && /paciente/i.test(r.data.mensaje || ''));
+    citaPacienteTraslapada = true;
+    break;
+  }
+  esperar('hay disponibilidad alternativa para probar traslape del paciente', citaPacienteTraslapada);
   r = await llamar('POST', '/citas', { token: recep, body: { paciente: pac.id, servicio: srv.id, profesional: psic.id, fecha, horaInicio: hora } });
   esperar('traslape de profesional -> 409', r.status === 409);
+  const usuarios = (await llamar('GET', '/usuarios', { token: admin })).data;
+  const noProfesional = usuarios.find((u) => u.rol !== 'PROFESIONAL');
+  r = await llamar('PUT', `/citas/${cita.id}`, { token: recep, body: { fecha, horaInicio: hora, profesional: noProfesional.id } });
+  esperar('reprogramación rechaza asignar un usuario que no es profesional -> 404', r.status === 404);
+  r = await llamar('GET', `/citas/disponibilidad?profesional=${psic.id}&fecha=${fecha}&servicio=${srv.id}&excluir=${cita.id}`, { token: recep });
+  const nuevaHora = r.data.libres.find((h) => h !== hora);
+  r = await llamar('PUT', `/citas/${cita.id}`, { token: recep, body: { fecha, horaInicio: nuevaHora, profesional: psic.id } });
+  esperar('reprogramar cita a otro horario disponible', r.status === 200 && r.data.horaInicio === nuevaHora);
   r = await llamar('POST', '/citas', { token: recep, body: { paciente: pac.id, servicio: srv.id, profesional: psic.id, fecha: '2020-01-06', horaInicio: '09:00' } });
   esperar('cita en el pasado -> 422', r.status === 422);
   r = await llamar('POST', '/citas', { token: recep, body: { paciente: pac.id, servicio: srv.id, profesional: psic.id, fecha: diaHabilFuturo(3).replace(/..$/, '') + '00', horaInicio: '03:00' } });

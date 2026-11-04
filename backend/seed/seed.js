@@ -2,7 +2,7 @@
  * Carga datos FICTICIOS de demostración (ningún dato real de pacientes).
  * Uso: npm run seed      (¡BORRA los datos existentes de SIGCA!)
  */
-require('dotenv').config();
+require("dotenv").config({ path: ".env.example" });
 const mongoose = require('mongoose');
 const M = require('../src/models');
 const F = require('../src/utils/fechas');
