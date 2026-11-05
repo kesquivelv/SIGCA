@@ -10,7 +10,7 @@ export const PERMISOS = {
 };
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({ usuario: null, token: leerToken(), listo: false }),
+    state: () => ({ usuario: null, token: leerToken(), listo: false }),
   getters: {
     autenticado: (s) => !!s.usuario,
     rol: (s) => s.usuario?.rol,

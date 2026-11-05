@@ -6,12 +6,14 @@ import { usePanelStore } from '../stores/panel';
 import { ROLES } from '../utils/format';
 import Logo from '../components/art/Logo.vue';
 import Icono from '../components/art/Icono.vue';
+import CambiarPassword from '../components/admin/CambiarPassword.vue';
 
 const auth = useAuthStore();
 const panel = usePanelStore();
 const route = useRoute();
 const router = useRouter();
 const abierto = ref(false);
+const cambiarPassword = ref(false);
 
 const grupos = [
   { titulo: 'Atención', items: [
@@ -69,6 +71,7 @@ function salir() {
         <strong>{{ auth.usuario.nombres }} {{ auth.usuario.apellidos }}</strong>
         <span>{{ ROLES[auth.usuario.rol] }}</span>
         <router-link to="/" class="btn btn-sm btn-claro">Ver portal público</router-link>
+        <button type="button" class="btn btn-sm btn-claro" @click="cambiarPassword = true">Cambiar contraseña</button>
         <button type="button" class="btn btn-sm btn-mostaza" @click="salir"><Icono nombre="salir" style="width:18px" /> Cerrar sesión</button>
       </div>
     </aside>
@@ -84,4 +87,5 @@ function salir() {
       </main>
     </div>
   </div>
+  <CambiarPassword v-if="cambiarPassword" @cerrar="cambiarPassword = false" />
 </template>

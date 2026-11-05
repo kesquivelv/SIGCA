@@ -1,4 +1,4 @@
-const { Cita, Servicio } = require('../models');
+const { Cita, Servicio, Usuario } = require('../models');
 const AppError = require('../utils/AppError');
 const { pick, requerir, validarId } = require('../utils/helpers');
 const { adjuntarFinanzas, finanzasDeCita } = require('../services/finanzas.service');
@@ -92,6 +92,11 @@ exports.actualizar = async (req, res) => {
   let detalle = 'Observaciones actualizadas';
   if (cambioHorario) {
     validarId(profesional, 'profesional');
+    const profesionalActivo = await Usuario.findById(profesional).select('rol activo');
+    if (!profesionalActivo || profesionalActivo.rol !== 'PROFESIONAL') {
+      throw new AppError('Profesional no encontrado', 404);
+    }
+    if (!profesionalActivo.activo) throw new AppError('El profesional está inactivo', 422);
     const { horaFin, inicio, fin } = await validarHorario({
       fecha, horaInicio, duracionMinutos: cita.duracionMinutos, profesional, paciente: cita.paciente, excluirCita: cita._id,
     });
@@ -126,4 +131,3 @@ exports.cambiarEstado = async (req, res) => {
   await cita.save();
   res.json(await cita.populate(POP_CITA));
 };
-

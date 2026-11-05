@@ -39,6 +39,8 @@ La sesión usa JWT (guardado en `localStorage`, enviado como `Bearer`). El menú
 | Servicios, usuarios, contenido del portal | Sí | No | No |
 | Materiales | Administra y asigna | Consulta | Consulta y asigna |
 
+El personal puede cambiar su propia contraseña desde **Cambiar contraseña** en el menú de sesión. El backend solicita la contraseña actual y no expone hashes.
+
 ## Estructura
 
 ```
@@ -59,6 +61,6 @@ src/
 - Las imágenes de publicaciones y avatares se ingresan por URL o se suben redimensionadas (se guardan como data URL); no hay servicio de almacenamiento de archivos.
 - El calendario usa la zona horaria del navegador.
 
-## Pendiente (tercer integrante)
+## Validación de seguridad y finanzas
 
-Autenticación, roles, gestión de citas, pagos, caja diaria y validaciones están asignados al tercer integrante y figuran como **pendientes**. Las pantallas y llamadas actuales son una implementación de referencia para que el panel funcione; deben ser revisadas y completadas por esa persona.
+Los permisos por rol se validan en el backend además de ocultar las opciones no permitidas en la interfaz. Los pagos solo se pueden anular si están registrados y su caja sigue abierta; reprogramar una cita revalida el profesional y los traslapes. Para el cierre de caja, las observaciones se requieren si hay diferencia. Consulte el README de la raíz para los comandos de prueba y las capturas.
