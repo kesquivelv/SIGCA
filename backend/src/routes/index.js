@@ -50,10 +50,16 @@ r.get('/servicios/:id', autenticacionOpcional, servicios.obtener);
 r.post('/publico/solicitudes', limitar(20, 60), solicitudes.crearPublica);
 r.post('/publico/contacto', limitar(20, 60), contenido.enviarMensaje);
 
+// Rutas públicas con los nombres exactos de la sección 8 del enunciado
+// (equivalentes a las anteriores; las usa la colección de Postman)
+r.post('/solicitudes-cita', limitar(20, 60), solicitudes.crearPublica);
+r.post('/contacto', limitar(20, 60), contenido.enviarMensaje);
+
 // ---------- Todo lo que sigue exige sesión ----------
 r.use(proteger);
 
 r.get('/dashboard', dashboard.resumen);
+r.get('/auth/me', auth.perfil); // nombre del enunciado (equivale a /auth/perfil)
 
 // Usuarios (solo administrador) + lista de profesionales (cualquier usuario autenticado)
 r.get('/profesionales', usuarios.profesionales);
@@ -96,6 +102,8 @@ r.get('/citas/:id', citas.obtener);
 r.post('/citas', autorizar(ADMIN, RECEP), citas.crear);
 r.put('/citas/:id', autorizar(ADMIN, RECEP), citas.actualizar);
 r.patch('/citas/:id/estado', citas.cambiarEstado); // el profesional solo puede completar las suyas
+r.get('/citas/:id/pagos', autorizar(ADMIN, RECEP), citas.pagos);
+r.get('/citas/:id/saldo', autorizar(ADMIN, RECEP), citas.saldo);
 
 // Solicitudes de cita del portal
 r.use('/solicitudes', autorizar(ADMIN, RECEP));
@@ -103,6 +111,9 @@ r.get('/solicitudes', solicitudes.listar);
 r.get('/solicitudes/:id', solicitudes.obtener);
 r.post('/solicitudes/:id/atender', solicitudes.atender);
 r.patch('/solicitudes/:id/rechazar', solicitudes.rechazar);
+r.get('/solicitudes-cita', autorizar(ADMIN, RECEP), solicitudes.listar); // nombre del enunciado
+r.post('/solicitudes-cita/:id/atender', autorizar(ADMIN, RECEP), solicitudes.atender);
+r.patch('/solicitudes-cita/:id/rechazar', autorizar(ADMIN, RECEP), solicitudes.rechazar);
 
 // Materiales
 r.get('/materiales', materiales.listar);
@@ -127,6 +138,15 @@ r.post('/caja/cerrar', caja.cerrar);
 r.get('/caja', caja.listar);
 r.get('/caja/:id', caja.obtener);
 
+// Caja con los nombres exactos del enunciado: /api/cajas/...
+r.use('/cajas', autorizar(ADMIN, RECEP));
+r.post('/cajas/abrir', caja.abrir);
+r.get('/cajas/actual', caja.actual);
+r.get('/cajas', caja.listar);
+r.get('/cajas/:id', caja.obtener);
+r.get('/cajas/:id/movimientos', caja.movimientos);
+r.post('/cajas/:id/cerrar', caja.cerrarPorId);
+
 // Contenido institucional (edición solo administrador)
 r.put('/contenido/:clave', autorizar(ADMIN), contenido.guardar);
 r.put('/horarios', autorizar(ADMIN), contenido.guardarHorarios);
@@ -137,5 +157,6 @@ r.patch('/publicaciones/:id/estado', autorizar(ADMIN), contenido.estadoPublicaci
 // Mensajes de contacto
 r.get('/mensajes', autorizar(ADMIN, RECEP), contenido.listarMensajes);
 r.patch('/mensajes/:id/leido', autorizar(ADMIN, RECEP), contenido.marcarMensaje);
+r.get('/contacto', autorizar(ADMIN), contenido.listarMensajes); // nombre del enunciado
 
 module.exports = r;

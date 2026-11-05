@@ -1,4 +1,4 @@
-const { Cita, Servicio, Usuario } = require('../models');
+const { Cita, Servicio, Usuario, Pago } = require('../models');
 const AppError = require('../utils/AppError');
 const { pick, requerir, validarId } = require('../utils/helpers');
 const { adjuntarFinanzas, finanzasDeCita } = require('../services/finanzas.service');
@@ -126,8 +126,32 @@ exports.cambiarEstado = async (req, res) => {
   if (estado === 'CANCELADA' && !String(motivo || '').trim()) {
     throw new AppError('Indique el motivo de la cancelación', 400);
   }
+  if (estado === 'CANCELADA') {
+    // RN-27: una cita con pagos válidos no puede cancelarse; primero deben anularse sus pagos
+    const pagosValidos = await Pago.countDocuments({ cita: cita._id, estado: 'REGISTRADO' });
+    if (pagosValidos > 0) {
+      throw new AppError(`La cita tiene ${pagosValidos} pago(s) válido(s). Anúlelos primero (mientras su caja siga abierta) y luego cancele la cita`, 409);
+    }
+  }
   cita.estado = estado;
   cita.historial.push({ accion: estado, detalle: motivo || '', usuario: req.usuario._id });
   await cita.save();
   res.json(await cita.populate(POP_CITA));
+};
+
+// GET /api/citas/:id/pagos  -> historial de pagos de la cita (incluye anulados) y su resumen financiero
+exports.pagos = async (req, res) => {
+  const cita = await cargar(req, req.params.id);
+  const pagos = await Pago.find({ cita: cita._id })
+    .populate('registradoPor', 'nombres apellidos')
+    .populate('anuladoPor', 'nombres apellidos')
+    .populate('caja', 'codigo estado')
+    .sort({ fechaHora: 1 });
+  res.json({ cita: cita.codigo, pagos, finanzas: await finanzasDeCita(cita) });
+};
+
+// GET /api/citas/:id/saldo  -> costo, pagado, saldo pendiente y estado de pago (calculados, RN-18)
+exports.saldo = async (req, res) => {
+  const cita = await cargar(req, req.params.id);
+  res.json({ cita: cita.codigo, ...(await finanzasDeCita(cita)) });
 };

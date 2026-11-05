@@ -49,13 +49,14 @@ exports.abrir = async (req, res) => {
   res.status(201).json(await detalle(caja));
 };
 
-// POST /api/caja/cerrar  { efectivoContado (Q), observaciones }
-exports.cerrar = async (req, res) => {
+/**
+ * Cierra una caja abierta: calcula los totales a partir de los pagos válidos (RN-23),
+ * el efectivo esperado y la diferencia con el efectivo contado.
+ */
+async function cerrarCaja(caja, req) {
   requerir(req.body, ['efectivoContado']);
   const contado = aCentavos(req.body.efectivoContado, 'efectivoContado');
   if (contado < 0) throw new AppError('El efectivo contado no puede ser negativo', 400);
-  const caja = await Caja.findOne({ usuario: req.usuario._id, estado: 'ABIERTA' });
-  if (!caja) throw new AppError('No tiene una caja abierta', 422);
 
   const t = totalesPorMetodo(await Pago.find({ caja: caja._id }));
   const esperado = caja.montoInicialCentavos + t.totalEfectivoCentavos;
@@ -73,7 +74,25 @@ exports.cerrar = async (req, res) => {
     cerradaPor: req.usuario._id,
   });
   await caja.save();
-  res.json(await detalle(caja));
+  return detalle(caja);
+}
+
+// POST /api/caja/cerrar  { efectivoContado (Q), observaciones }  -> cierra la caja abierta del usuario
+exports.cerrar = async (req, res) => {
+  const caja = await Caja.findOne({ usuario: req.usuario._id, estado: 'ABIERTA' });
+  if (!caja) throw new AppError('No tiene una caja abierta', 422);
+  res.json(await cerrarCaja(caja, req));
+};
+
+// POST /api/cajas/:id/cerrar  { efectivoContado (Q), observaciones }  -> ruta del enunciado
+// La recepcionista solo cierra sus propias cajas; el administrador puede cerrar cualquiera.
+exports.cerrarPorId = async (req, res) => {
+  validarId(req.params.id);
+  const caja = await Caja.findById(req.params.id);
+  if (!caja) throw new AppError('Caja no encontrada', 404);
+  if (!propia(req, caja)) throw new AppError('Solo puede cerrar sus propias cajas', 403);
+  if (caja.estado !== 'ABIERTA') throw new AppError('La caja ya está cerrada', 422);
+  res.json(await cerrarCaja(caja, req));
 };
 
 // GET /api/caja?estado=&desde=&hasta=   (recepcionista: solo las suyas)
@@ -97,4 +116,15 @@ exports.obtener = async (req, res) => {
   if (!caja) throw new AppError('Caja no encontrada', 404);
   if (!propia(req, caja)) throw new AppError('Solo puede consultar sus propias cajas', 403);
   res.json(await detalle(caja));
+};
+
+// GET /api/cajas/:id/movimientos  -> pagos que forman parte de la caja (incluye anulados)
+exports.movimientos = async (req, res) => {
+  validarId(req.params.id);
+  const caja = await Caja.findById(req.params.id);
+  if (!caja) throw new AppError('Caja no encontrada', 404);
+  if (!propia(req, caja)) throw new AppError('Solo puede consultar sus propias cajas', 403);
+  const obj = await detalle(caja);
+  const { pagos, ...resumen } = obj;
+  res.json({ caja: resumen, pagos });
 };

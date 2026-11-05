@@ -5,10 +5,11 @@
  *  - Un profesional no puede tener dos citas que se traslapen (RN-13);
  *    solo PENDIENTE y CONFIRMADA bloquean el horario.
  *  - Un paciente tampoco puede estar en dos citas a la vez.
+ *  - Un menor de edad necesita al menos un responsable registrado (RN-04).
  *  - La cita copia duración y precio del servicio al programarse (RF-07).
  */
 const {
-  Cita, Paciente, Servicio, Usuario, Horario, siguienteCodigo,
+  Cita, Paciente, Servicio, Usuario, Horario, Responsable, siguienteCodigo,
 } = require('../models');
 const { ESTADOS_QUE_BLOQUEAN } = require('../models/Cita');
 const AppError = require('../utils/AppError');
@@ -68,6 +69,10 @@ async function programarCita({
   ]);
   if (!pac) throw new AppError('Paciente no encontrado', 404);
   if (pac.estado !== 'ACTIVO') throw new AppError('No se pueden programar citas para un paciente inactivo', 422);
+  // RN-04: un menor de edad debe tener al menos un responsable registrado antes de programar citas
+  if (pac.edad < 18 && !(await Responsable.exists({ pacientes: pac._id }))) {
+    throw new AppError(`El paciente es menor de edad (${pac.edad} años) y debe tener al menos un responsable registrado antes de programar citas`, 422);
+  }
   if (!srv) throw new AppError('Servicio no encontrado', 404);
   if (srv.estado !== 'ACTIVO') throw new AppError('El servicio está inactivo', 422);
   if (!prof || prof.rol !== 'PROFESIONAL') throw new AppError('Profesional no encontrado', 404);

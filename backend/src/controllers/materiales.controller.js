@@ -71,6 +71,7 @@ exports.asignar = async (req, res) => {
   if (!m) throw new AppError('Material no encontrado', 404);
   if (m.estado !== 'ACTIVO') throw new AppError('El material está inactivo', 422);
   if (!p) throw new AppError('Paciente no encontrado', 404);
+  if (p.estado !== 'ACTIVO') throw new AppError('Los materiales solo pueden asignarse a pacientes activos', 422); // RN-09
   if (req.usuario.rol === 'PROFESIONAL'
     && !(await Cita.exists({ profesional: req.usuario._id, paciente: p._id }))) {
     throw new AppError('Solo puede asignar materiales a pacientes con citas con usted', 403);

@@ -50,13 +50,15 @@ Se completaron los faltantes de interfaz y validación:
 - **Cierre de caja:** cuando el efectivo contado difiere del esperado, el campo observaciones se marca requerido y se valida antes de enviar. El backend mantiene la validación final.
 - **Contraseña propia:** se añadió un modal accesible desde la sesión para cambiarla con la contraseña actual, mínimo de 8 caracteres y confirmación; usa `PATCH /api/auth/password`.
 - **Traslape del paciente:** el flujo automatizado intenta una cita superpuesta con otro profesional y verifica que el servidor responda `409` por conflicto del paciente.
-- **Configuración JWT:** el servidor y el seed cargan `backend/.env.example`; el servidor no arranca si falta una clave JWT de al menos 32 caracteres.
+- **Configuración JWT:** el servidor y el seed cargan `backend/.env` (que nunca se sube a GitHub); el servidor no arranca si falta una clave JWT de al menos 32 caracteres.
+- **Reglas de negocio reforzadas:** un menor de edad necesita al menos un responsable antes de programar citas (RN-04), los materiales solo se asignan a pacientes activos (RN-09) y una cita con pagos válidos no puede cancelarse hasta anularlos (RN-27).
+- **Rutas del enunciado:** además de las rutas que usa el frontend, la API expone los nombres exactos de la sección 8 (`/api/auth/me`, `/api/solicitudes-cita`, `/api/contacto`, `/api/citas/:id/pagos`, `/api/citas/:id/saldo` y `/api/cajas/...`, incluidos `/api/cajas/:id/movimientos` y `/api/cajas/:id/cerrar`).
 
 La autenticación JWT, la carga del usuario activo en cada petición, el control de permisos por rol, los estados de citas, la caja del usuario y los importes enteros en centavos ya están protegidos por el backend. El flujo también comprueba tokens inválidos, revocación inmediata al desactivar un usuario y que el profesional no pueda consultar teléfonos de responsables. El frontend no sustituye esas comprobaciones.
 
 ### Ejecutar las validaciones
 
-1. Edite `backend/.env.example`: configure `MONGODB_URI` con su conexión a MongoDB y `JWT_SECRET` con una clave aleatoria de al menos 32 caracteres. En este proyecto el servidor y el seed leen directamente este archivo; no es necesario crear `backend/.env`.
+1. Dentro de `backend/`, copie la plantilla (`copy .env.example .env` en Windows o `cp .env.example .env` en Linux/macOS) y en `backend/.env` configure `MONGODB_URI` y `JWT_SECRET` con una clave aleatoria de al menos 32 caracteres.
 2. Cargue los datos ficticios con `npm run seed` desde `backend/` (el seed limpia las colecciones de la base configurada).
 3. Inicie la API (`npm run dev`) y el frontend (`npm run dev` desde `frontend/`).
 4. Con la API activa, ejecute `npm run test:flujo` desde `backend/`. Incluye autenticación, roles, pacientes, citas, traslapes, pagos, caja, cierre y validación del portal.
@@ -77,6 +79,8 @@ Las capturas del portal y módulos administrativos se guardan en [`docs/evidenci
 
 ## Requisitos de instalación
 
+> Guía paso a paso para Windows, con solución de problemas frecuentes: [INSTALACION-WINDOWS.md](INSTALACION-WINDOWS.md).
+
 1. **Node.js 18 o superior** (`node -v`).
 2. **MongoDB 6 o superior**, de una de estas dos formas:
    - **Local:** instalar MongoDB Community Server (en Windows queda como servicio y escucha en `mongodb://127.0.0.1:27017`). Se recomienda instalar también MongoDB Compass para revisar los datos.
@@ -85,12 +89,15 @@ Las capturas del portal y módulos administrativos se guardan en [`docs/evidenci
 
 ## Configuración de MongoDB y variables de entorno
 
-Edite directamente `backend/.env.example`; tanto `npm run dev` como `npm run seed` cargan las variables de este archivo:
+Cree `backend/.env` a partir de la plantilla; tanto `npm run dev` como `npm run seed` cargan las variables de ese archivo:
 
 ```bash
 cd backend
-# Edite .env.example y configure MONGODB_URI y JWT_SECRET.
+copy .env.example .env      # Windows (en Linux/macOS: cp .env.example .env)
+# Edite .env y configure MONGODB_URI y JWT_SECRET.
 ```
+
+Para generar una clave segura: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 | Variable | Descripción | Ejemplo |
 |---|---|---|
@@ -101,7 +108,7 @@ cd backend
 | `CORS_ORIGIN` | URL del frontend | `http://localhost:5173` |
 | `TZ_OFFSET` | Zona horaria del centro | `-06:00` |
 
-> `.env.example` se usa para la configuración local de este proyecto y está versionado. No coloque credenciales reales ni claves de producción en él; para producción configure secretos mediante variables de entorno seguras.
+> `backend/.env` está en `.gitignore` y nunca se sube al repositorio. `backend/.env.example` es solo la plantilla versionada: no coloque en ella credenciales reales.
 
 ## Comandos de ejecución
 
@@ -165,7 +172,7 @@ Validado el **4 de noviembre de 2026** en una base MongoDB local aislada para la
 
 ## Colección de Postman
 
-Importe `postman/SIGCA.postman_collection.json`. Ejecute primero **1. Autenticación → Login admin**: el token y los IDs creados se guardan solos en variables de la colección, así que las carpetas pueden correrse en orden (o completas con *Run collection*).
+Importe `postman/SIGCA.postman_collection.json` (81 solicitudes en 10 carpetas, con las rutas de la sección 8 del enunciado). Con la API activa y los datos recién cargados, ejecute la colección completa con *Run collection*, o las carpetas en orden: el token y los IDs creados se guardan solos en variables de la colección. Incluye las pruebas de la sección 16 que no cubre `test:flujo`: segundo pago y estado PAGADO, comprobante, pagos con distintos métodos, ingresos del día, cierre con diferencia, pago con caja cerrada y cancelación bloqueada de una cita con pagos (RN-27). Puede ejecutarse varias veces seguidas sin volver a cargar los datos.
 
 ## Seguridad implementada
 

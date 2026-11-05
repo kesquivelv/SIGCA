@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 4000;
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error(
-    "Configure JWT_SECRET en backend/.env.example con al menos 32 caracteres",
+    "Configure JWT_SECRET en backend/.env (copie backend/.env.example) con al menos 32 caracteres",
   );
   process.exit(1);
 }
